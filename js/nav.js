@@ -11,7 +11,7 @@ const NAV_HTML = `
                             <!-- <img src="img/logo/img_avatar.jpeg" alt=""> -->
                             <span class="logo-text">
                                 <span>Alexandra Tudorache</span>
-                                <span class="email copy-on-click">atudorache1509@gmail.com</span>
+                                <span class="email">atudorache1509@gmail.com</span>
                             </span>
                         </a>
                     </div>
@@ -51,7 +51,74 @@ const NAV_HTML = `
 
 
 
+// Toaster
+function showSuccessToast(message) {
+    // 1. Create the container or use an existing one to prevent overlapping
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        // Style the container to sit fixed at the top center of the screen
+        Object.assign(container.style, {
+            position: 'fixed',
+            top: '20px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: '9999',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '10px',
+            pointerEvents: 'none' // Allows clicking elements underneath the gaps
+        });
+        document.body.appendChild(container);
+    }
 
+    // 2. Create the actual toast element
+    const toast = document.createElement('div');
+    toast.innerText = message;
+
+    // 3. Style the green toaster
+    Object.assign(toast.style, {
+        backgroundColor: '#10b981', // Emerald green
+        color: '#ffffff',
+        padding: '12px 24px',
+        borderRadius: '8px',
+        fontFamily: 'system-ui, -apple-system, sans-serif',
+        fontSize: '14px',
+        fontWeight: '500',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+        pointerEvents: 'auto', // Re-enable pointer events for the toast itself
+        opacity: '0',
+        transform: 'translateY(-20px)',
+        transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)' // Nice spring effect
+    });
+
+    // Append the toast to our container
+    container.appendChild(toast);
+
+    // 4. Trigger the slide-in animation on the next frame
+    requestAnimationFrame(() => {
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateY(0)';
+    });
+
+    // 5. Wait 2 seconds, fade it out, then delete it from the DOM
+    setTimeout(() => {
+        // Slide out and fade
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-20px)';
+
+        // Wait for the 0.4s CSS transition to finish before destroying the node
+        toast.addEventListener('transitionend', () => {
+            toast.remove();
+            
+            // If it was the last toast, clean up the container too
+            if (container.childElementCount === 0) {
+                container.remove();
+            }
+        });
+    }, 2000);
+}
 
 
 
@@ -65,6 +132,16 @@ const NAV_HTML = `
 
 
 // Helpers
+async function copyToClipboard(textToCopy) {
+    try {
+        // Attempt to write the text directly to the system clipboard
+        await navigator.clipboard.writeText(textToCopy);
+    } catch (err) {
+        // Fallback or error logging if the browser blocks the action
+        console.error("Failed to copy text: ", err);
+        // Optional: Alert the user or show an error toast if you have one
+    }
+}
 function getPageName(urlString) {
   try {
     // Pass window.location.href as the base. 
@@ -99,6 +176,12 @@ function initHeader() {
 
     // Create header
     const header = parseHTML(NAV_HTML)
+
+    // Add copy event listener
+    header.querySelector('.logo-text').addEventListener('click', async (evt) => {
+        await copyToClipboard('atudorache1509@gmail.com')
+        showSuccessToast('Copied!')
+    })
 
     // Insert it at the location of the script tag
     const thisScript = document.currentScript;
